@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
-import { mockTransactions, getTopCategories, getEngagementTrend } from "../../data/mockData";
+import { useData } from "../../contexts/DataContext";
+import { getTopCategories, getEngagementTrend } from "../../services/googleSheetsService";
 
 const CHART_COLORS = {
   primary: "hsl(17 98% 58%)",      // Brand Orange
@@ -37,8 +38,10 @@ const ChartCard = ({ title, subtitle, children, delay }: ChartCardProps) => {
 };
 
 export const ChartsSection = () => {
-  const topCategories = getTopCategories(mockTransactions);
-  const engagementTrend = getEngagementTrend(mockTransactions);
+  const { transactions, loading } = useData();
+  
+  const topCategories = getTopCategories(transactions);
+  const engagementTrend = getEngagementTrend(transactions);
   
   // Prepare pie chart data with colors
   const pieData = topCategories.map((item, index) => ({
@@ -152,10 +155,10 @@ export const ChartsSection = () => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={[
-                { status: 'Received', count: mockTransactions.filter(t => t.paymentStatus === 'Received').length, fill: CHART_COLORS.success },
-                { status: 'Due', count: mockTransactions.filter(t => t.paymentStatus === 'Due').length, fill: CHART_COLORS.warning },
-                { status: 'Pending', count: mockTransactions.filter(t => t.paymentStatus === 'Pending').length, fill: CHART_COLORS.secondary },
-              ]} 
+                { status: 'Received', count: transactions.filter(t => t.paymentStatus === 'Received').length, fill: CHART_COLORS.success },
+                { status: 'Due', count: transactions.filter(t => t.paymentStatus === 'Due').length, fill: CHART_COLORS.warning },
+                { status: 'Pending', count: transactions.filter(t => t.paymentStatus === 'Pending').length, fill: CHART_COLORS.secondary },
+              ]}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />

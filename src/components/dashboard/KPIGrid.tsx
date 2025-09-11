@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 import { TrendingUp, ShoppingCart, CreditCard, AlertCircle } from "lucide-react";
-import { mockTransactions, calculateTotalRevenue, calculateTotalOrders, calculatePaymentsReceived, calculatePaymentsDue } from "../../data/mockData";
+import { useData } from "../../contexts/DataContext";
+import { 
+  calculateTotalRevenue, 
+  calculateTotalOrders, 
+  calculatePaymentsReceived, 
+  calculatePaymentsDue 
+} from "../../services/googleSheetsService";
 
 interface KPICardProps {
   title: string;
@@ -48,10 +54,12 @@ const KPICard = ({ title, value, subtitle, icon, trend, delay }: KPICardProps) =
 };
 
 export const KPIGrid = () => {
-  const totalRevenue = calculateTotalRevenue(mockTransactions);
-  const totalOrders = calculateTotalOrders(mockTransactions);
-  const paymentsReceived = calculatePaymentsReceived(mockTransactions);
-  const paymentsDue = calculatePaymentsDue(mockTransactions);
+  const { transactions, loading } = useData();
+  
+  const totalRevenue = calculateTotalRevenue(transactions);
+  const totalOrders = calculateTotalOrders(transactions);
+  const paymentsReceived = calculatePaymentsReceived(transactions);
+  const paymentsDue = calculatePaymentsDue(transactions);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -106,6 +114,11 @@ export const KPIGrid = () => {
         transition={{ duration: 0.6 }}
       >
         Key Performance Indicators
+        {loading && (
+          <span className="text-sm font-normal text-muted-foreground ml-2">
+            Loading...
+          </span>
+        )}
       </motion.h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">

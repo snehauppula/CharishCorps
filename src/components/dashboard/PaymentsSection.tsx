@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { DollarSign, Clock, CheckCircle, AlertTriangle } from "lucide-react";
-import { mockTransactions, calculatePaymentsReceived, calculatePaymentsDue } from "../../data/mockData";
+import { useData } from "../../contexts/DataContext";
+import { calculatePaymentsReceived, calculatePaymentsDue } from "../../services/googleSheetsService";
 
 interface PaymentCardProps {
   title: string;
@@ -83,12 +84,14 @@ const PaymentCard = ({ title, amount, icon, variant, transactions, delay }: Paym
 };
 
 export const PaymentsSection = () => {
-  const paymentsReceived = calculatePaymentsReceived(mockTransactions);
-  const paymentsDue = calculatePaymentsDue(mockTransactions);
+  const { transactions } = useData();
   
-  const receivedTransactions = mockTransactions.filter(t => t.paymentStatus === 'Received');
-  const dueTransactions = mockTransactions.filter(t => t.paymentStatus === 'Due');
-  const pendingTransactions = mockTransactions.filter(t => t.paymentStatus === 'Pending');
+  const paymentsReceived = calculatePaymentsReceived(transactions);
+  const paymentsDue = calculatePaymentsDue(transactions);
+  
+  const receivedTransactions = transactions.filter(t => t.paymentStatus === 'Received');
+  const dueTransactions = transactions.filter(t => t.paymentStatus === 'Due');
+  const pendingTransactions = transactions.filter(t => t.paymentStatus === 'Pending');
 
   return (
     <section>
