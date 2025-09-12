@@ -25,8 +25,8 @@ export const DashboardHeader = () => {
           >
             <img 
               src="/CharishCorps.jpg" 
-              alt="CharishCorps Logo" 
-              className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover shadow-lg"
+              alt="Charish Corporates Logo" 
+              className="w-12 h-12 md:w-16 md:h-16 rounded-lg object-cover shadow-lg border-2 border-white/20"
             />
             <h1 className="text-3xl md:text-4xl font-bold text-gradient-primary tracking-tight">
               Charish Corporates
