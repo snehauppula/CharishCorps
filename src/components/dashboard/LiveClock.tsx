@@ -32,20 +32,18 @@ export const LiveClock: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20, scale: 0.95 }}
+      initial={{ opacity: 0, x: -20, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-      className="fixed top-4 right-4 z-50 glass-card p-4 bg-gradient-primary text-primary-foreground shadow-lg"
+      transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+      className="btn-glass group bg-gradient-primary text-primary-foreground"
     >
-      <div className="flex items-center gap-3">
-        <Calendar className="w-5 h-5" />
-        <div className="text-right">
-          <div className="text-lg font-mono font-bold tracking-wide">
-            {formatTime(currentTime)}
-          </div>
-          <div className="text-sm opacity-95 font-medium">
-            {formatDate(currentTime)}
-          </div>
+      <Calendar className="w-4 h-4" />
+      <div className="text-left">
+        <div className="text-sm font-mono font-bold tracking-wide">
+          {formatTime(currentTime)}
+        </div>
+        <div className="text-xs opacity-95 font-medium">
+          {formatDate(currentTime)}
         </div>
       </div>
     </motion.div>

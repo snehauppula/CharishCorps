@@ -9,7 +9,6 @@ import { LiveClock } from "./LiveClock";
 const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-gradient-background p-4 md:p-6 lg:p-8">
-      <LiveClock />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

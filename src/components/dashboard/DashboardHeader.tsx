@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { RefreshCw, MessageCircle } from "lucide-react";
 import { useData } from "../../contexts/DataContext";
+import { LiveClock } from "./LiveClock";
 
 export const DashboardHeader = () => {
   const { refreshData, loading } = useData();
@@ -45,6 +46,8 @@ export const DashboardHeader = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="flex items-center gap-4"
         >
+          <LiveClock />
+          
           <button 
             className="btn-glass group"
             onClick={handleRefresh}
