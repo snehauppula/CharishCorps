@@ -10,7 +10,12 @@ export const DashboardHeader = () => {
   };
 
   const handleTelegramRedirect = () => {
-    window.open('https://t.me/charishcorps_bot', '_blank');
+    const telegramUrl = import.meta.env.VITE_TELEGRAM_BOT_URL;
+    if (!telegramUrl) {
+      console.error('VITE_TELEGRAM_BOT_URL environment variable is not set');
+      return;
+    }
+    window.open(telegramUrl, '_blank');
   };
 
   return (

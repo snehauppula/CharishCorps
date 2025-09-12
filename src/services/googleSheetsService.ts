@@ -24,14 +24,24 @@ export interface TransactionData {
 }
 
 export class GoogleSheetsService {
-  private static readonly SHEET_ID = '1q7VRyoVgLzXutTVDfWChJrhIYW6pCS3Ayp6EHmqwHhU';
-  private static readonly CSV_URL = `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/export?format=csv&gid=0`;
+  private static readonly SHEET_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID;
+  private static readonly CSV_URL = this.SHEET_ID 
+    ? `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/export?format=csv&gid=0`
+    : null;
   private static readonly CACHE_DURATION = 30000; // 30 seconds cache
   private static lastFetchTime = 0;
   private static cachedData: TransactionData[] | null = null;
 
   static async fetchSheetData(forceRefresh = false): Promise<TransactionData[]> {
     try {
+      if (!this.SHEET_ID) {
+        throw new Error('VITE_GOOGLE_SHEETS_ID environment variable is not set');
+      }
+      
+      if (!this.CSV_URL) {
+        throw new Error('Unable to construct CSV URL - Google Sheets ID is missing');
+      }
+      
       const now = Date.now();
       
       // Return cached data if it's fresh and not forcing refresh
