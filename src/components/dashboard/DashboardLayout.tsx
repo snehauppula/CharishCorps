@@ -2,11 +2,14 @@ import { motion } from "framer-motion";
 import { DashboardHeader } from "./DashboardHeader";
 import { KPIGrid } from "./KPIGrid";
 import { ChartsSection } from "./ChartsSection";
-import { PaymentsSection } from "./PaymentsSection";
+import { QuickActionsPanel } from "./QuickActionsPanel";
+import { DataTable } from "./DataTable";
+import { LiveClock } from "./LiveClock";
 
 const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-gradient-background p-4 md:p-6 lg:p-8">
+      <LiveClock />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -19,8 +22,14 @@ const DashboardLayout = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
-          <KPIGrid />
+          <div className="lg:col-span-2">
+            <KPIGrid />
+          </div>
+          <div className="lg:col-span-1">
+            <QuickActionsPanel />
+          </div>
         </motion.div>
 
         <motion.div
@@ -36,8 +45,9 @@ const DashboardLayout = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
         >
-          <PaymentsSection />
+          <DataTable />
         </motion.div>
+
       </motion.div>
     </div>
   );

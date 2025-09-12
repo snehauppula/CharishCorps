@@ -8,6 +8,10 @@ interface DataContextType {
   error: string | null;
   refreshData: () => Promise<void>;
   lastUpdated: Date | null;
+  autoRefresh: boolean;
+  setAutoRefresh: (enabled: boolean) => void;
+  refreshInterval: number;
+  setRefreshInterval: (interval: number) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -21,21 +25,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
   const { toast } = useToast();
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
       
-      const data = await GoogleSheetsService.fetchSheetData();
+      const data = await GoogleSheetsService.fetchSheetData(forceRefresh);
       setTransactions(data);
       setLastUpdated(new Date());
       
-      if (data.length > 0) {
+      if (data.length > 0 && forceRefresh) {
         toast({
           title: "Data Updated",
-          description: `Loaded ${data.length} transactions from Google Sheets`,
+          description: `Refreshed ${data.length} transactions from Google Sheets`,
           duration: 3000,
         });
       }
@@ -56,7 +62,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   };
 
   const refreshData = async () => {
-    await fetchData();
+    await fetchData(true);
   };
 
   // Initial data fetch
@@ -64,12 +70,27 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     fetchData();
   }, []);
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      fetchData(false); // Use cache if available
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval]);
+
   const value: DataContextType = {
     transactions,
     loading,
     error,
     refreshData,
     lastUpdated,
+    autoRefresh,
+    setAutoRefresh,
+    refreshInterval,
+    setRefreshInterval,
   };
 
   return (

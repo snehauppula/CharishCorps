@@ -6,7 +6,7 @@ import { getTopCategories, getEngagementTrend } from "../../services/googleSheet
 const CHART_COLORS = {
   primary: "hsl(17 98% 58%)",      // Brand Orange
   secondary: "hsl(30 26% 39%)",    // Brand Brown
-  accent: "hsl(45 29% 94%)",       // Brand Cream
+  accent: "hsl(200 70% 50%)",      // Blue (better contrast for labels)
   success: "hsl(120 60% 50%)",     // Green
   warning: "hsl(45 100% 60%)",     // Amber
 };
@@ -27,7 +27,7 @@ const ChartCard = ({ title, subtitle, children, delay }: ChartCardProps) => {
       className="chart-container group"
     >
       <div className="mb-6">
-        <h3 className="text-xl font-semibold text-foreground mb-1">{title}</h3>
+        <h3 className="text-xl font-semibold text-foreground mb-1 tracking-tight">{title}</h3>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       <div className="h-80">
@@ -52,7 +52,7 @@ export const ChartsSection = () => {
   return (
     <section>
       <motion.h2 
-        className="text-2xl font-bold text-foreground mb-6"
+        className="text-2xl font-bold text-foreground mb-6 tracking-tight"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
@@ -91,8 +91,8 @@ export const ChartsSection = () => {
 
         {/* Revenue Trend Line Chart */}
         <ChartCard
-          title="Revenue Trend"
-          subtitle="Daily revenue performance"
+          title="Monthly Revenue Trend"
+          subtitle="Revenue performance by month"
           delay={0.1}
         >
           <ResponsiveContainer width="100%" height="100%">
@@ -106,6 +106,7 @@ export const ChartsSection = () => {
               <YAxis 
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 stroke="hsl(var(--border))"
+                tickFormatter={(value) => `₹${value}`}
               />
               <Line 
                 type="monotone" 
@@ -148,31 +149,43 @@ export const ChartsSection = () => {
 
         {/* Payment Status Overview */}
         <ChartCard
-          title="Payment Status"
-          subtitle="Payment completion rates"
+          title="Revenue by Customer"
+          subtitle="Bill amounts per customer"
           delay={0.3}
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
-              data={[
-                { status: 'Received', count: transactions.filter(t => t.paymentStatus === 'Received').length, fill: CHART_COLORS.success },
-                { status: 'Due', count: transactions.filter(t => t.paymentStatus === 'Due').length, fill: CHART_COLORS.warning },
-                { status: 'Pending', count: transactions.filter(t => t.paymentStatus === 'Pending').length, fill: CHART_COLORS.secondary },
-              ]}
+              data={(() => {
+                const customerRevenue = transactions.reduce((acc, transaction) => {
+                  const customer = transaction.customer;
+                  acc[customer] = (acc[customer] || 0) + transaction.totalAmount;
+                  return acc;
+                }, {} as Record<string, number>);
+                
+                return Object.entries(customerRevenue).map(([customer, revenue]) => ({
+                  customer: customer.length > 15 ? customer.substring(0, 15) + '...' : customer,
+                  revenue,
+                  fill: CHART_COLORS.primary
+                }));
+              })()}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
               <XAxis 
-                dataKey="status" 
+                dataKey="customer" 
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 stroke="hsl(var(--border))"
+                angle={-45}
+                textAnchor="end"
+                height={60}
               />
               <YAxis 
                 tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                 stroke="hsl(var(--border))"
+                tickFormatter={(value) => `₹${value}`}
               />
               <Bar 
-                dataKey="count" 
+                dataKey="revenue" 
                 radius={[8, 8, 0, 0]}
                 className="hover:opacity-80 transition-opacity"
               />

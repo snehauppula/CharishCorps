@@ -26,15 +26,31 @@ export interface TransactionData {
 export class GoogleSheetsService {
   private static readonly SHEET_ID = '1q7VRyoVgLzXutTVDfWChJrhIYW6pCS3Ayp6EHmqwHhU';
   private static readonly CSV_URL = `https://docs.google.com/spreadsheets/d/${this.SHEET_ID}/export?format=csv&gid=0`;
+  private static readonly CACHE_DURATION = 30000; // 30 seconds cache
+  private static lastFetchTime = 0;
+  private static cachedData: TransactionData[] | null = null;
 
-  static async fetchSheetData(): Promise<TransactionData[]> {
+  static async fetchSheetData(forceRefresh = false): Promise<TransactionData[]> {
     try {
-      console.log('Fetching data from Google Sheets...');
+      const now = Date.now();
       
-      const response = await fetch(this.CSV_URL, {
+      // Return cached data if it's fresh and not forcing refresh
+      if (!forceRefresh && this.cachedData && (now - this.lastFetchTime) < this.CACHE_DURATION) {
+        console.log('Returning cached Google Sheets data');
+        return this.cachedData;
+      }
+
+      console.log('Fetching fresh data from Google Sheets...');
+      
+      // Add timestamp to prevent caching
+      const urlWithTimestamp = `${this.CSV_URL}&t=${now}`;
+      
+      const response = await fetch(urlWithTimestamp, {
         method: 'GET',
         headers: {
           'Accept': 'text/csv',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
         },
         mode: 'cors',
       });
@@ -52,17 +68,32 @@ export class GoogleSheetsService {
         console.warn('No transactions found in CSV data');
       }
       
+      // Cache the results
+      this.cachedData = transactions;
+      this.lastFetchTime = now;
+      
       return transactions;
     } catch (error) {
       console.error('Error fetching Google Sheets data:', error);
       
+      // If we have cached data, return it as fallback
+      if (this.cachedData) {
+        console.warn('Using cached data due to fetch error');
+        return this.cachedData;
+      }
+      
       // If CORS error or other fetch issues, throw with helpful message
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Unable to fetch data - please check if the Google Sheet is publicly accessible or try connecting via Supabase for better data handling');
+        throw new Error('Unable to fetch data - please check if the Google Sheet is publicly accessible. Make sure the sheet is set to "Anyone with the link can view"');
       }
       
       throw new Error('Failed to fetch data from Google Sheets');
     }
+  }
+
+  static clearCache(): void {
+    this.cachedData = null;
+    this.lastFetchTime = 0;
   }
 
   private static parseCSVToTransactions(csvText: string): TransactionData[] {
@@ -79,6 +110,8 @@ export class GoogleSheetsService {
       
       try {
         const [date, customer, mobile, address, product, quantity, totalAmount] = columns;
+        
+        // Parse the transaction data
         
         // Parse multiple products and quantities
         const products = product.split(';').map(p => p.trim()).filter(Boolean);
@@ -136,7 +169,9 @@ export class GoogleSheetsService {
     }
     
     result.push(current.trim());
-    return result;
+    
+    // Clean up the results - remove quotes and trim
+    return result.map(field => field.replace(/^"(.*)"$/, '$1').trim());
   }
 
   private static formatDate(dateStr: string): string {
@@ -151,6 +186,19 @@ export class GoogleSheetsService {
   private static categorizeProduct(product: string): string {
     const productLower = product.toLowerCase();
     
+    // Categorize based on your actual products
+    if (productLower.includes('t-shirt') || productLower.includes('tee') || productLower.includes('shirt')) {
+      return 'Apparel';
+    }
+    if (productLower.includes('magnet') || productLower.includes('fridge')) {
+      return 'Merchandise';
+    }
+    if (productLower.includes('design') || productLower.includes('charges')) {
+      return 'Design Services';
+    }
+    if (productLower.includes('transport') || productLower.includes('shipping')) {
+      return 'Logistics';
+    }
     if (productLower.includes('software') || productLower.includes('app') || productLower.includes('system')) {
       return 'Software';
     }
@@ -168,16 +216,14 @@ export class GoogleSheetsService {
   }
 
   private static determinePaymentStatus(amount: number): 'Received' | 'Due' | 'Pending' {
-    // Simple logic: assume recent high-value transactions are pending/due
-    if (amount > 10000) {
-      return Math.random() > 0.6 ? 'Received' : 'Due';
-    }
-    return Math.random() > 0.3 ? 'Received' : 'Pending';
+    // Since these are bills issued, all should be marked as "Due" until payment is received
+    // In a real scenario, you would have a separate payment tracking system
+    return 'Due';
   }
 
   private static determinePaymentMethod(): string | undefined {
-    const methods = ['Bank Transfer', 'Credit Card', 'PayPal', 'Cash', undefined];
-    return methods[Math.floor(Math.random() * methods.length)];
+    // For bills issued, payment method is not yet determined
+    return undefined;
   }
 }
 
